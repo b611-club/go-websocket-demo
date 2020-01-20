@@ -9,13 +9,6 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-type ClientManager struct {
-	clients    map[*Client]bool
-	broadcast  chan []byte
-	register   chan *Client
-	unregister chan *Client
-}
-
 type Client struct {
 	id     string
 	socket *websocket.Conn
@@ -28,11 +21,26 @@ type Message struct {
 	Content   string `json:"content,omitempty"`
 }
 
+type ClientManager struct {
+	clients    map[*Client]bool
+	broadcast  chan []byte
+	register   chan *Client
+	unregister chan *Client
+}
+
 var manager = ClientManager{
+	clients:    make(map[*Client]bool),
 	broadcast:  make(chan []byte),
 	register:   make(chan *Client),
 	unregister: make(chan *Client),
-	clients:    make(map[*Client]bool),
+}
+
+func (manager *ClientManager) send(message []byte, ignore *Client) {
+	for conn := range manager.clients {
+		if conn != ignore {
+			conn.send <- message
+		}
+	}
 }
 
 func (manager *ClientManager) start() {
@@ -58,14 +66,6 @@ func (manager *ClientManager) start() {
 					delete(manager.clients, conn)
 				}
 			}
-		}
-	}
-}
-
-func (manager *ClientManager) send(message []byte, ignore *Client) {
-	for conn := range manager.clients {
-		if conn != ignore {
-			conn.send <- message
 		}
 	}
 }
