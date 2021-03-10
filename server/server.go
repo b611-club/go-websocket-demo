@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 type Client struct {
@@ -119,7 +119,7 @@ func wsPage(res http.ResponseWriter, req *http.Request) {
 		http.NotFound(res, req)
 		return
 	}
-	newId, _ := uuid.NewV4()
+	newId := uuid.NewV4()
 	client := &Client{
 		id:     newId.String(),
 		socket: conn,
